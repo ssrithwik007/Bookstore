@@ -1,10 +1,12 @@
 from fastapi import APIRouter, status, HTTPException
 from fastapi.params import Depends
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from .. import schemas, models
 from ..database import get_db
 from typing import List
 from passlib.context import CryptContext
+from .login import admin_only, user_only
 
 router = APIRouter(
     prefix="/users"
@@ -22,49 +24,94 @@ def validate_book(book_id: int, db: Session):
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
 
-@router.get("/{user_id}", response_model=schemas.UserOut, status_code=status.HTTP_200_OK, tags=["Users"])
-def get_user(user_id: int, db: Session=Depends(get_db)):
-    user = db.query(models.User).filter(models.User.id == user_id).first()
+@router.get("/me", response_model=schemas.UserOut, status_code=status.HTTP_200_OK, tags=["Users"])
+def get_account(db: Session=Depends(get_db), current_user: schemas.TokenData=Depends(user_only)):
+    user = db.query(models.User).filter(models.User.id == current_user.user_id).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return user
 
 @router.get("/", response_model=List[schemas.UserOut], status_code=status.HTTP_200_OK, tags=["Users"])
-def get_all_users(db: Session=Depends(get_db)):
+def get_all_users(db: Session=Depends(get_db), current_user: schemas.TokenData=Depends(admin_only)):
     users = db.query(models.User).all()
     return users
 
 @router.post("/", status_code=status.HTTP_201_CREATED, tags=["Users"])
 def create_user(request: schemas.UserCreate, db: Session=Depends(get_db)):
+
+    existing_email = db.query(models.User).filter((models.User.email == request.email)).first()
+
+    if existing_email:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Email already used"
+        )
+
+    existing_username = db.query(models.User).filter((models.User.username == request.username)).first()
+
+    if existing_username:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Username already taken"
+            )
+
     hashed_pwd = pwd_context.hash(request.password)
     new_user = models.User(
         username = request.username,
         email = request.email,
-        password = hashed_pwd
+        password = hashed_pwd,
+        role = request.role
     )
 
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    try:
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        return {"message": "User created successfully"}
+    
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Username or email already exists"
+        )
 
-    return {"User created successfully"}
-
-@router.delete("/{user_id}", status_code=status.HTTP_200_OK, tags=["Users"])
-def delete_user(user_id: int, db: Session=Depends(get_db)):
-    user = db.query(models.User).filter(models.User.id == user_id).delete(synchronize_session=False)
+@router.delete("/me", status_code=status.HTTP_200_OK, tags=["Users"])
+def delete_account(db: Session=Depends(get_db), current_user: schemas.TokenData=Depends(user_only)):
+    user = db.query(models.User).filter(models.User.id == current_user.user_id).delete(synchronize_session=False)
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     db.commit()
     return {"User Removed Successfully"}
 
-@router.put("/{user_id}", status_code=status.HTTP_200_OK, tags=["Users"])
-def update_user(user_id: int, request: schemas.UserCreate, db: Session=Depends(get_db)):
-    user_query = db.query(models.User).filter(models.User.id == user_id)
+@router.put("/me", status_code=status.HTTP_200_OK, tags=["Users"])
+def update_details(request: schemas.UserUpdate, db: Session=Depends(get_db), current_user: schemas.TokenData=Depends(user_only)):
+
+    existing_email = db.query(models.User).filter((models.User.email == request.email,
+                                                   models.User.id != current_user.user_id)).first()
+
+    if existing_email:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Email already used"
+        )
+
+    existing_username = db.query(models.User).filter((models.User.username == request.username,
+                                                      models.User.id != current_user.user_id)).first()
+
+    if existing_username:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Username already taken"
+            )
+
+    user_query = db.query(models.User).filter(models.User.id == current_user.user_id)
     user = user_query.first()
+    
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     
-    user_data = request.model_dump()
+    user_data = request.model_dump(exclude_unset=True)
 
     if "password" in user_data and user_data["password"]:
         user_data["password"] = pwd_context.hash(user_data["password"])
@@ -75,30 +122,30 @@ def update_user(user_id: int, request: schemas.UserCreate, db: Session=Depends(g
     db.commit()
     return {"User successfully updated"}
 
-@router.get("/{user_id}/cart", response_model=List[schemas.CartOut], status_code=status.HTTP_200_OK, tags=["Cart"])
-def get_cart(user_id: int, db: Session=Depends(get_db)):
+@router.get("/me/cart", response_model=List[schemas.CartOut], status_code=status.HTTP_200_OK, tags=["Cart"])
+def get_cart(db: Session=Depends(get_db), current_user: schemas.TokenData=Depends(user_only)):
     try:
-        validate_user(user_id, db)
+        validate_user(current_user.user_id, db)
     except Exception as e:
         raise e
 
-    cart = db.query(models.Cart).filter(models.Cart.user_id == user_id).all()
+    cart = db.query(models.Cart).filter(models.Cart.user_id == current_user.user_id).all()
 
     if not cart:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cart is empty") 
     
     return cart
 
-@router.post("/{user_id}/cart", response_model=schemas.CartOut, status_code=status.HTTP_201_CREATED, tags=["Cart"])
-def add_to_cart(user_id: int, request: schemas.CartItem, db: Session=Depends(get_db)):
+@router.post("/me/cart", response_model=schemas.CartOut, status_code=status.HTTP_201_CREATED, tags=["Cart"])
+def add_to_cart(request: schemas.CartItem, db: Session=Depends(get_db), current_user: schemas.TokenData=Depends(user_only)):
     try:
         validate_book(request.book_id, db)
-        validate_user(user_id, db)
+        validate_user(current_user.user_id, db)
     except Exception as e:
         raise e
 
-    cart_item = db.query(models.Cart).filter(models.Cart.user_id == user_id,
-                                                 models.Cart.book_id == request.book_id).first()
+    cart_item = db.query(models.Cart).filter(models.Cart.user_id == current_user.user_id,
+                                             models.Cart.book_id == request.book_id).first()
     if cart_item:
         cart_item.quantity += request.quantity
         db.commit()
@@ -106,7 +153,7 @@ def add_to_cart(user_id: int, request: schemas.CartItem, db: Session=Depends(get
         return cart_item
     
     new_cart_item = models.Cart(
-        user_id = user_id,
+        user_id = current_user.user_id,
         book_id = request.book_id,
         quantity = request.quantity
     )
@@ -117,15 +164,15 @@ def add_to_cart(user_id: int, request: schemas.CartItem, db: Session=Depends(get
 
     return new_cart_item
 
-@router.delete("/{user_id}/cart", status_code=status.HTTP_200_OK, tags=["Cart"])
-def remove_from_cart(user_id: int, request: schemas.CartItem, db: Session=Depends(get_db)):
+@router.delete("/me/cart", status_code=status.HTTP_200_OK, tags=["Cart"])
+def remove_from_cart(request: schemas.CartItem, db: Session=Depends(get_db), current_user: schemas.TokenData=Depends(user_only)):
     try:
         validate_book(request.book_id, db)
-        validate_user(user_id, db)
+        validate_user(current_user.user_id, db)
     except Exception as e:
         raise e
     
-    cart_item = db.query(models.Cart).filter(models.Cart.user_id == user_id,
+    cart_item = db.query(models.Cart).filter(models.Cart.user_id == current_user.user_id,
                                              models.Cart.book_id == request.book_id).first()
     
     if not cart_item or cart_item.quantity == 0:
@@ -141,47 +188,47 @@ def remove_from_cart(user_id: int, request: schemas.CartItem, db: Session=Depend
         db.commit()
         return {"Removed item from cart successfully"}
     
-@router.delete("/{user_id}/cart/clear", status_code=status.HTTP_200_OK, tags=["Cart"])
-def clear_cart(user_id: int, db: Session=Depends(get_db)):
+@router.delete("/me/cart/clear", status_code=status.HTTP_200_OK, tags=["Cart"])
+def clear_cart(db: Session=Depends(get_db), current_user: schemas.TokenData=Depends(user_only)):
     try:
-        validate_user(user_id, db)
+        validate_user(current_user.user_id, db)
     except Exception as e:
         raise e
     
-    cart = db.query(models.Cart).filter(models.Cart.user_id == user_id).all()
+    cart = db.query(models.Cart).filter(models.Cart.user_id == current_user.user_id).all()
 
     if not cart:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cart is empty")
 
-    db.query(models.Cart).filter(models.Cart.user_id == user_id).delete(synchronize_session=False)
+    db.query(models.Cart).filter(models.Cart.user_id == current_user.user_id).delete(synchronize_session=False)
     db.commit()
 
     return {"message": "Cart Cleared"}
     
-@router.get("/{user_id}/purchases", response_model= List[schemas.PurchaseOut], status_code=status.HTTP_200_OK, tags=["Purchase"])
-def get_all_purchases(user_id: int, db: Session=Depends(get_db)):
+@router.get("/me/purchases", response_model= List[schemas.PurchaseOut], status_code=status.HTTP_200_OK, tags=["Purchase"])
+def get_all_purchases(db: Session=Depends(get_db), current_user: schemas.TokenData=Depends(user_only)):
     try:
-        validate_user(user_id, db)
+        validate_user(current_user.user_id, db)
     except Exception as e:
         raise e
         
-    purchases = db.query(models.Purchase).filter(models.Purchase.user_id == user_id).all()
+    purchases = db.query(models.Purchase).filter(models.Purchase.user_id == current_user.user_id).all()
 
     if not purchases:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No purchase history found")
         
     return purchases
     
-@router.post("/{user_id}/purchases", status_code=status.HTTP_201_CREATED, tags=["Purchase"])
-def purchase_book(user_id: int, request: schemas.PurchaseCreate, db: Session=Depends(get_db)):
+@router.post("/me/purchases", status_code=status.HTTP_201_CREATED, tags=["Purchase"])
+def purchase_book(request: schemas.PurchaseCreate, db: Session=Depends(get_db), current_user: schemas.TokenData=Depends(user_only)):
     try:
         validate_book(request.book_id, db)
-        validate_user(user_id, db)
+        validate_user(current_user.user_id, db)
     except Exception as e:
         raise e
 
     new_purchase=models.Purchase(
-        user_id = user_id,
+        user_id = current_user.user_id,
         book_id = request.book_id,
         quantity = request.quantity
     )
@@ -193,14 +240,14 @@ def purchase_book(user_id: int, request: schemas.PurchaseCreate, db: Session=Dep
     return {"message": "Purchase successful",
             "Purchase id": new_purchase.id}
 
-@router.post("/{user_id}/checkout", status_code=status.HTTP_201_CREATED, tags=["Purchase", "Cart"])
-def checkout_cart(user_id: int, db: Session=Depends(get_db)):
+@router.post("/me/checkout", status_code=status.HTTP_201_CREATED, tags=["Purchase", "Cart"])
+def checkout_cart(db: Session=Depends(get_db), current_user: schemas.TokenData=Depends(user_only)):
     try:
-        validate_user(user_id, db)
+        validate_user(current_user.user_id, db)
     except Exception as e:
         raise e
     
-    cart = db.query(models.Cart).filter(models.Cart.user_id == user_id).all()
+    cart = db.query(models.Cart).filter(models.Cart.user_id == current_user.user_id).all()
 
     if not cart:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cart is empty")
@@ -215,20 +262,20 @@ def checkout_cart(user_id: int, db: Session=Depends(get_db)):
         db.commit()
         db.refresh(new_purchase)
 
-    db.query(models.Cart).filter(models.Cart.user_id == user_id).delete(synchronize_session=False)
+    db.query(models.Cart).filter(models.Cart.user_id == current_user.user_id).delete(synchronize_session=False)
     db.commit()
 
     return {"message": "Purchase Successful"}
 
-@router.delete("/{user_id}/purchases/{book_id}", status_code=status.HTTP_201_CREATED, tags=["Purchase"])
-def refund_book(user_id: int, book_id: int, db: Session=Depends(get_db)):
+@router.delete("/me/purchases/{book_id}", status_code=status.HTTP_201_CREATED, tags=["Purchase"])
+def refund_book(book_id: int, db: Session=Depends(get_db), current_user: schemas.TokenData=Depends(user_only)):
     try:
         validate_book(book_id, db)
-        validate_user(user_id, db)
+        validate_user(current_user.user_id, db)
     except Exception as e:
         raise e
     
-    purchase = db.query(models.Purchase).filter(models.Purchase.user_id == user_id,
+    purchase = db.query(models.Purchase).filter(models.Purchase.user_id == current_user.user_id,
                                                 models.Purchase.book_id == book_id).first()
     
     if purchase:
