@@ -50,7 +50,7 @@ def delete_book(book_id: int, db: Session=Depends(get_db), current_user: schemas
     if not book:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
     
-    if current_user.role != "admin" and book.added_by != current_user.user_id:
+    if current_user.role == "trail_admin" and book.added_by_id != current_user.user_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cannot delete books which are not added by you.")
 
     db.delete(book)
@@ -63,7 +63,7 @@ def update_book(book_id: int, request: schemas.BookUpdate, db: Session=Depends(g
     if book.first() is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
     
-    if current_user.role != "admin" and book.first().added_by != current_user.user_id:
+    if current_user.role == "trail_admin" and book.first().added_by_id != current_user.user_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cannot update books which are not added by you.")
     
     duplicate = db.query(models.Book).filter(

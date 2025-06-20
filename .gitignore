@@ -9,3 +9,4 @@ env/
 .streamlit/
 
 reqs.txt
+sample_books.txt

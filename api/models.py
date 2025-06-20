@@ -15,7 +15,7 @@ class Book(Base):
     price = Column(Float)
     added_by_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"))
 
-    added_by = relationship("User", back_populates="books_added", cascade="all, delete")
+    added_by = relationship("User", back_populates="books_added")
 
 class User(Base):
     __tablename__ = 'users'
