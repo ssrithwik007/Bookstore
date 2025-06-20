@@ -54,7 +54,7 @@ def get_account(db: Session=Depends(get_db), current_user: schemas.TokenData=Dep
     return user
 
 @router.post("/", status_code=status.HTTP_201_CREATED, tags=["Users"])
-def create_user(request: schemas.UserCreate, db: Session=Depends(get_db)):
+def create_account(request: schemas.UserCreate, db: Session=Depends(get_db)):
 
     existing_email = db.query(models.User).filter((models.User.email == request.email)).first()
 
