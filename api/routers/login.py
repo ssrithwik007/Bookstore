@@ -74,3 +74,8 @@ def trail_admin_plus(current_user: schemas.TokenData = Depends(get_current_user)
     if current_user.role not in ["admin", "trail_admin"]:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin/Trail Admin access required")
     return current_user
+
+def trail_admin_nd_user(current_user: schemas.TokenData = Depends(get_current_user)):
+    if current_user.role not in ["user", "trail_admin"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Trail Admin/User access only")
+    return current_user

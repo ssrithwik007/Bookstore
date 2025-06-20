@@ -6,7 +6,7 @@ from .. import schemas, models
 from ..database import get_db
 from typing import List
 from passlib.context import CryptContext
-from .login import admin_only, user_only
+from .login import admin_only, user_only, trail_admin_nd_user
 
 router = APIRouter(
     prefix="/users"
@@ -94,15 +94,15 @@ def create_user(request: schemas.UserCreate, db: Session=Depends(get_db)):
         )
 
 @router.delete("/me", status_code=status.HTTP_200_OK, tags=["Users"])
-def delete_account(db: Session=Depends(get_db), current_user: schemas.TokenData=Depends(user_only)):
+def delete_account(db: Session=Depends(get_db), current_user: schemas.TokenData=Depends(trail_admin_nd_user)):
     user = db.query(models.User).filter(models.User.id == current_user.user_id).delete(synchronize_session=False)
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     db.commit()
-    return {"User Removed Successfully"}
+    return {"message": "User Removed Successfully"}
 
 @router.put("/me", status_code=status.HTTP_200_OK, tags=["Users"])
-def update_details(request: schemas.UserUpdate, db: Session=Depends(get_db), current_user: schemas.TokenData=Depends(user_only)):
+def update_details(request: schemas.UserUpdate, db: Session=Depends(get_db), current_user: schemas.TokenData=Depends(trail_admin_nd_user)):
 
     existing_email = db.query(models.User).filter((models.User.email == request.email,
                                                    models.User.id != current_user.user_id)).first()
@@ -137,7 +137,7 @@ def update_details(request: schemas.UserUpdate, db: Session=Depends(get_db), cur
     db.commit()
 
     db.commit()
-    return {"User successfully updated"}
+    return {"message": "User successfully updated"}
 
 @router.get("/me/cart", response_model=List[schemas.CartOut], status_code=status.HTTP_200_OK, tags=["Cart"])
 def get_cart(db: Session=Depends(get_db), current_user: schemas.TokenData=Depends(user_only)):
@@ -203,7 +203,7 @@ def remove_from_cart(request: schemas.CartItem, db: Session=Depends(get_db), cur
     else:
         db.delete(cart_item)
         db.commit()
-        return {"Removed item from cart successfully"}
+        return {"message": "Removed item from cart successfully"}
     
 @router.delete("/me/cart/clear", status_code=status.HTTP_200_OK, tags=["Cart"])
 def clear_cart(db: Session=Depends(get_db), current_user: schemas.TokenData=Depends(user_only)):
