@@ -27,7 +27,7 @@ class Cart(Base):
     __tablename__ = 'cart_items'
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
+    user_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"))
     book_id = Column(Integer, ForeignKey('books.id'))
     quantity = Column(Integer, default=1)
 
@@ -38,7 +38,7 @@ class Purchase(Base):
     __tablename__ = 'purchases'
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
+    user_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"))
     book_id = Column(Integer, ForeignKey('books.id'))
     quantity = Column(Integer, default=1)
 
