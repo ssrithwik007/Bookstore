@@ -3,7 +3,7 @@ from fastapi.params import Depends
 from sqlalchemy.orm import Session
 from .. import schemas, models
 from ..database import get_db
-from .login import admin_only, user_only
+from .login import trail_admin_plus
 from typing import List
 
 router = APIRouter(
@@ -24,7 +24,7 @@ def get_book(book_id: int, db: Session=Depends(get_db)):
     return book
 
 @router.post("/", response_model=schemas.BookOut, status_code=status.HTTP_201_CREATED)
-def add_book(request: schemas.BookCreate, db: Session=Depends(get_db), current_user = Depends(admin_only)):
+def add_book(request: schemas.BookCreate, db: Session=Depends(get_db), current_user: schemas.TokenData=Depends(trail_admin_plus)):
     existing_book = db.query(models.Book).filter(models.Book.name == request.name,
                                                  models.Book.author == request.author).first()
     
@@ -36,7 +36,8 @@ def add_book(request: schemas.BookCreate, db: Session=Depends(get_db), current_u
         author = request.author,
         description = request.description,
         genre = request.genre,
-        price = request.price
+        price = request.price,
+        added_by_id = current_user.user_id
     )
     db.add(new_book)
     db.commit()
@@ -44,18 +45,26 @@ def add_book(request: schemas.BookCreate, db: Session=Depends(get_db), current_u
     return new_book
 
 @router.delete("/{book_id}", status_code=status.HTTP_200_OK)
-def delete_book(book_id: int, db: Session=Depends(get_db), current_user = Depends(admin_only)):
-    book = db.query(models.Book).filter(models.Book.id == book_id).delete(synchronize_session=False)
+def delete_book(book_id: int, db: Session=Depends(get_db), current_user: schemas.TokenData=Depends(trail_admin_plus)):
+    book = db.query(models.Book).filter(models.Book.id == book_id).first()
     if not book:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
+    
+    if current_user.role != "admin" and book.added_by != current_user.user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cannot delete books which are not added by you.")
+
+    db.delete(book)
     db.commit()
     return {"message": "Book deleted successfully"}
 
 @router.put("/{book_id}", response_model=schemas.BookOut, status_code=status.HTTP_200_OK)
-def update_book(book_id: int, request: schemas.BookUpdate, db: Session=Depends(get_db), current_user=Depends(admin_only)):
+def update_book(book_id: int, request: schemas.BookUpdate, db: Session=Depends(get_db), current_user: schemas.TokenData=Depends(trail_admin_plus)):
     book = db.query(models.Book).filter(models.Book.id == book_id)
     if book.first() is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
+    
+    if current_user.role != "admin" and book.first().added_by != current_user.user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cannot update books which are not added by you.")
     
     duplicate = db.query(models.Book).filter(
         models.Book.name == request.name,

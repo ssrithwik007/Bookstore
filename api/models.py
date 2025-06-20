@@ -1,6 +1,8 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey
 from sqlalchemy.orm import relationship
+from sqlalchemy import Enum as SQLAlchemyEnum
 from .database import Base
+from .schemas import RoleEnum
 
 class Book(Base):
     __tablename__ = 'books'
@@ -11,6 +13,9 @@ class Book(Base):
     description = Column(String)
     genre = Column(String)
     price = Column(Float)
+    added_by_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"))
+
+    added_by = relationship("User", back_populates="books_added", cascade="all, delete")
 
 class User(Base):
     __tablename__ = 'users'
@@ -19,8 +24,9 @@ class User(Base):
     username = Column(String, unique=True, nullable=False)
     email = Column(String, unique=True, nullable=False)
     password = Column(String, nullable=False)
-    role = Column(String, default="user")
+    role = Column(SQLAlchemyEnum(RoleEnum, name="role_enum"), default=RoleEnum.user, nullable=False)
 
+    books_added = relationship("Book", back_populates="added_by", cascade="all, delete")
     cart_items = relationship("Cart", back_populates='user', cascade="all, delete")
     purchases = relationship("Purchase", back_populates='user', cascade="all, delete")
 

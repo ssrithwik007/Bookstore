@@ -10,9 +10,26 @@ from .login import admin_only, user_only
 
 router = APIRouter(
     prefix="/users"
-)
+    )
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated = "auto")
+
+def init_admin(username: str, password: str):
+    db =  next(get_db())
+
+    existing_admin = db.query(models.User).filter(models.User.username == username).first()
+    if not existing_admin:
+        hashed_pwd = pwd_context.hash(password)
+        new_admin = models.User(
+            username = username,
+            email = "admin-doesn't-need-email",
+            password = hashed_pwd,
+            role = "admin"
+        )
+
+        db.add(new_admin)
+        db.commit()
+        db.refresh(new_admin)
 
 def validate_user(user_id: int, db: Session):
     user = db.query(models.User).filter(models.User.id == user_id).first()
@@ -24,17 +41,17 @@ def validate_book(book_id: int, db: Session):
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
 
+@router.get("/", response_model=List[schemas.UserOut], status_code=status.HTTP_200_OK, tags=["Users"])
+def get_all_users(db: Session=Depends(get_db), current_user: schemas.TokenData=Depends(admin_only)):
+    users = db.query(models.User).all()
+    return users
+
 @router.get("/me", response_model=schemas.UserOut, status_code=status.HTTP_200_OK, tags=["Users"])
 def get_account(db: Session=Depends(get_db), current_user: schemas.TokenData=Depends(user_only)):
     user = db.query(models.User).filter(models.User.id == current_user.user_id).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return user
-
-@router.get("/", response_model=List[schemas.UserOut], status_code=status.HTTP_200_OK, tags=["Users"])
-def get_all_users(db: Session=Depends(get_db), current_user: schemas.TokenData=Depends(admin_only)):
-    users = db.query(models.User).all()
-    return users
 
 @router.post("/", status_code=status.HTTP_201_CREATED, tags=["Users"])
 def create_user(request: schemas.UserCreate, db: Session=Depends(get_db)):
@@ -175,7 +192,7 @@ def remove_from_cart(request: schemas.CartItem, db: Session=Depends(get_db), cur
     cart_item = db.query(models.Cart).filter(models.Cart.user_id == current_user.user_id,
                                              models.Cart.book_id == request.book_id).first()
     
-    if not cart_item or cart_item.quantity == 0:
+    if not cart_item:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book does not exist in cart")
     
     if cart_item.quantity - request.quantity > 0:

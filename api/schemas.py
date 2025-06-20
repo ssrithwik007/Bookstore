@@ -1,5 +1,11 @@
 from typing import List, Optional
 from pydantic import BaseModel
+from enum import Enum
+
+class RoleEnum(str, Enum):
+    user = "user"
+    admin = "admin"
+    trail_admin = "trail_admin"
 
 class BookCreate(BaseModel):
     name : str
@@ -8,11 +14,16 @@ class BookCreate(BaseModel):
     genre : str
     price : float
 
-class BookOut(BookCreate):
+class BookOut(BaseModel):
     id: int
+    name : str
+    author : str
+    description : str
+    genre : str
+    price : float
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class BookUpdate(BaseModel):
     name : Optional[str] = None
@@ -25,7 +36,7 @@ class UserCreate(BaseModel):
     username: str
     email: str
     password: str
-    role: Optional[str] = "user"
+    role: RoleEnum = RoleEnum.user
 
 class UserLogin(BaseModel):
     username: str
@@ -46,7 +57,7 @@ class CartOut(BaseModel):
     book: BookOut
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class PurchaseCreate(BaseModel):
     book_id: int
@@ -58,18 +69,18 @@ class PurchaseOut(BaseModel):
     book: BookOut
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class UserOut(BaseModel):
     id: int
     username: str
     email: str
-    role: str
+    role: RoleEnum
     cart_items: List[CartOut]
     purchases: List[PurchaseOut]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Token(BaseModel):
     access_token: str
@@ -77,4 +88,4 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     user_id: Optional[int] = None
-    role: Optional[str] = None
+    role: Optional[RoleEnum] = None
