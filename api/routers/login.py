@@ -44,7 +44,8 @@ def login(request: OAuth2PasswordRequestForm = Depends(), db: Session=Depends(ge
                                           "role": user.role})
 
     return {"access_token": access_token,
-            "token_type": "bearer"}
+            "role": user.role,
+            "token_type": "Bearer"}
 
 def get_current_user(token: str = Depends(oauth2_scheme)):
     cred_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,

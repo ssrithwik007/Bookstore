@@ -56,14 +56,6 @@ def get_account(db: Session=Depends(get_db), current_user: schemas.TokenData=Dep
 @router.post("/", status_code=status.HTTP_201_CREATED, tags=["Users"])
 def create_account(request: schemas.UserCreate, db: Session=Depends(get_db)):
 
-    existing_email = db.query(models.User).filter((models.User.email == request.email)).first()
-
-    if existing_email:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Email already used"
-        )
-
     existing_username = db.query(models.User).filter((models.User.username == request.username)).first()
 
     if existing_username:
@@ -71,6 +63,14 @@ def create_account(request: schemas.UserCreate, db: Session=Depends(get_db)):
             status_code=status.HTTP_409_CONFLICT,
             detail="Username already taken"
             )
+    
+    existing_email = db.query(models.User).filter((models.User.email == request.email)).first()
+
+    if existing_email:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Email already used"
+        )
 
     hashed_pwd = pwd_context.hash(request.password)
     new_user = models.User(
