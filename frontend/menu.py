@@ -4,13 +4,28 @@ import streamlit as st
 def authenticated_menu():
     # Show a navigation menu for authenticated users
     st.sidebar.page_link("pages/home.py", label="Home")
-    st.sidebar.page_link("app.py", label="Log out")
     if st.session_state.role in ["admin", "trail_admin"]:
+        st.sidebar.divider()
         st.sidebar.page_link("pages/view_books.py", label="View books")
         st.sidebar.page_link("pages/add_books.py", label="Add books")
+        st.sidebar.page_link("pages/update_books.py", label="Update books")
+        st.sidebar.page_link("pages/delete_books.py", label="Delete books")
+        st.sidebar.divider()        
         st.sidebar.page_link("pages/get_users.py", label="View users", disabled=st.session_state.role != "admin")
-        # st.sidebar.page_link("pages/update_books.py", label="Update books")
-        # st.sidebar.page_link("pages/delete_books.py", label="Delete books")
+
+    if st.session_state.role == "user":
+        st.sidebar.divider()
+        st.sidebar.page_link("pages/browse.py", label="Browse Books")
+        st.sidebar.page_link("pages/view_cart.py", label="View Cart")
+        st.sidebar.page_link("pages/purchase.py", label="Purchase Books")
+
+    if st.session_state.role in ["trail_admin", "user"]:
+        st.sidebar.divider()
+        st.sidebar.page_link("pages/update_account.py", label="Update Credentials")
+        st.sidebar.page_link("pages/delete_account.py", label="Delete Account")
+        st.sidebar.divider()
+
+    st.sidebar.page_link("app.py", label="Log out")
 
 
 def unauthenticated_menu():

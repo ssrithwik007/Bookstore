@@ -18,7 +18,9 @@ headers = {
     "Authorization": f"Bearer {st.session_state.access_token}"
 }
 
-response = requests.get(url, headers=headers)
+with st.spinner("Fetching users from the database"):
+    response = requests.get(url, headers=headers)
+
 users = response.json()
 
 df = pd.DataFrame([{

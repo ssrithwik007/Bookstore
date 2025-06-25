@@ -1,15 +1,20 @@
 import streamlit as st
 import requests
+import re
 from config import API_URL
+
+email_pattern = r"^[\w\.-]+@[\w\.-]+\.\w{2,4}$"
 
 col1, col2, col3 = st.columns(3)
 
 with col2:
-    with st.form(key="new user form", enter_to_submit=False):
+    with st.container(border=True):
         st.header("Create Account")
 
         username = st.text_input(label="Username", placeholder="Enter username")
         email = st.text_input(label="Email", placeholder="xyz@email.com")
+        if not re.match(email_pattern, email):
+            st.warning("Enter a valid email address")
         password = st.text_input(label="Password", placeholder="Enter password (atleast 8 characters)", type="password")
         if password.__len__() < 8:
             st.warning("Password length must be atleast 8 characters long")
@@ -17,7 +22,10 @@ with col2:
 
         role = st.selectbox(label="Choose your role", options=["user", "trail_admin"])
 
-        submit = st.form_submit_button(label="Log in")
+        is_pwd_valid = ((len(password) >= 8) and (password == re_password))
+        is_email_valid = (re.match(email_pattern, email))
+
+        submit = st.button(label="Create Account", disabled= not(is_pwd_valid and is_email_valid))
 
     if submit:
         if not username or not email or not password or not re_password:
