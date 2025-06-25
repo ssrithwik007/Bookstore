@@ -17,7 +17,7 @@ def authenticated_menu():
         st.sidebar.divider()
         st.sidebar.page_link("pages/browse.py", label="Browse Books")
         st.sidebar.page_link("pages/view_cart.py", label="View Cart")
-        st.sidebar.page_link("pages/purchase.py", label="Purchase Books")
+        st.sidebar.page_link("pages/purchase.py", label="View Purchases")
 
     if st.session_state.role in ["trail_admin", "user"]:
         st.sidebar.divider()
