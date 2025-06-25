@@ -47,7 +47,7 @@ def get_all_users(db: Session=Depends(get_db), current_user: schemas.TokenData=D
     return users
 
 @router.get("/me", response_model=schemas.UserOut, status_code=status.HTTP_200_OK, tags=["Users"])
-def get_account(db: Session=Depends(get_db), current_user: schemas.TokenData=Depends(user_only)):
+def get_account(db: Session=Depends(get_db), current_user: schemas.TokenData=Depends(trail_admin_nd_user)):
     user = db.query(models.User).filter(models.User.id == current_user.user_id).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -104,8 +104,8 @@ def delete_account(db: Session=Depends(get_db), current_user: schemas.TokenData=
 @router.put("/me", status_code=status.HTTP_200_OK, tags=["Users"])
 def update_details(request: schemas.UserUpdate, db: Session=Depends(get_db), current_user: schemas.TokenData=Depends(trail_admin_nd_user)):
 
-    existing_email = db.query(models.User).filter((models.User.email == request.email,
-                                                   models.User.id != current_user.user_id)).first()
+    existing_email = db.query(models.User).filter(models.User.email == request.email,
+                                                   models.User.id != current_user.user_id).first()
 
     if existing_email:
         raise HTTPException(
@@ -113,8 +113,8 @@ def update_details(request: schemas.UserUpdate, db: Session=Depends(get_db), cur
             detail="Email already used"
         )
 
-    existing_username = db.query(models.User).filter((models.User.username == request.username,
-                                                      models.User.id != current_user.user_id)).first()
+    existing_username = db.query(models.User).filter(models.User.username == request.username,
+                                                      models.User.id != current_user.user_id).first()
 
     if existing_username:
         raise HTTPException(
@@ -129,6 +129,12 @@ def update_details(request: schemas.UserUpdate, db: Session=Depends(get_db), cur
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     
     user_data = request.model_dump(exclude_unset=True)
+
+    if not user_data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No data provided to update"
+        )
 
     if "password" in user_data and user_data["password"]:
         user_data["password"] = pwd_context.hash(user_data["password"])
@@ -147,9 +153,6 @@ def get_cart(db: Session=Depends(get_db), current_user: schemas.TokenData=Depend
         raise e
 
     cart = db.query(models.Cart).filter(models.Cart.user_id == current_user.user_id).all()
-
-    if not cart:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cart is empty") 
     
     return cart
 
@@ -230,9 +233,6 @@ def get_all_purchases(db: Session=Depends(get_db), current_user: schemas.TokenDa
         raise e
         
     purchases = db.query(models.Purchase).filter(models.Purchase.user_id == current_user.user_id).all()
-
-    if not purchases:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No purchase history found")
         
     return purchases
     
