@@ -67,6 +67,7 @@ with col2:
             if response.status_code == 200:
                 st.session_state.access_token = response_data["access_token"]
                 st.session_state.role = response_data["role"]
+                st.session_state.username = response_data["username"]
                 st.success("Login successful!")
                 menu()
                 st.switch_page("pages/home.py")

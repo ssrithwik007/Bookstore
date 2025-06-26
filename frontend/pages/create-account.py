@@ -57,9 +57,12 @@ with col2:
                 response = requests.post(f"{API_URL}/users", json=data)
 
             if response.status_code == 201:
-                st.success("Account created successfully!")
-                st.session_state.go_to_login = True
-                st.page_link(page="app.py", label="Click here to log in")
+                with st.container():
+                    st.success("Account created successfully!")
+                    st.session_state.go_to_login = True
+                    col1, col2, col3 = st.columns(3)
+                    with col2:
+                        st.page_link(page="app.py", label="Click here to log in", use_container_width=True)
             elif response.status_code == 409:
                 st.error(response.json().get("detail", "Account already exists"))
             else:

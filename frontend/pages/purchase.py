@@ -17,11 +17,11 @@ def refund_all_books_dialog(books):
     st.warning("Are you sure you want to refund all books?")
     col1, col2, col3 = st.columns([2, 1, 2])
     with col1:
-        if st.button("✅ Yes, Refund All", type="primary"):
+        if st.button("✅ Yes, Refund All", use_container_width=True):
             refund_all_books(books)
             st.rerun()
     with col3:
-        if st.button("❌ Cancel"):
+        if st.button("❌ Cancel",type="primary", use_container_width=True):
             st.stop()
 
 @st.dialog("Refund Book?")
@@ -29,11 +29,11 @@ def refund_book_dialog(book):
     st.warning(f"Are you sure you want to refund {book['name']}?")
     col1, col2, col3 = st.columns([2, 1, 2])
     with col1:
-        if st.button("✅ Yes, Refund", type="primary"):
+        if st.button("✅ Yes, Refund", use_container_width=True):
             refund_book(book['id'])
             st.rerun()
     with col3:
-        if st.button("❌ Cancel"):
+        if st.button("❌ Cancel", type="primary", use_container_width=True):
             st.stop()
 
 purchases = fetch_purchases()

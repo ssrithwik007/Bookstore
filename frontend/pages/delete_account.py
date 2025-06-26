@@ -12,16 +12,18 @@ st.set_page_config(
 menu_with_redirect()
 
 with st.container(border=True):
+    st.error("Are you sure you want to delete the account?")
     with st.container():
-        st.error("Are you sure you want to delete the account?")
         if st.session_state.role == "user":
             st.text("All the items in your cart will be deleted and all the books you have purchased will be refunded")
         if st.session_state.role == "trail_admin":
             st.text("All the books which you have added will be deleted")
     st.markdown("---")
-    col1, col2 = st.columns([1,1])
-    with col1:
-        if st.button("No, Keep my account", type="primary", key="redirect", use_container_width=True):
-            st.switch_page("pages/home.py")
-    with col2:
-        st.button("Yes, Delete my account", key="delete", on_click=delete_account, use_container_width=True)
+    with st.container():
+        col1, col2 = st.columns([1,1])
+        with col1:
+            if st.button("No, Keep my account", type="primary", key="redirect", use_container_width=True):
+                st.switch_page("pages/home.py")
+        with col2:
+            if st.button("Yes, Delete my account", key="delete", on_click=delete_account, use_container_width=True):
+                st.switch_page("pages/home.py")

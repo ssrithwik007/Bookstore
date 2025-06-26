@@ -45,6 +45,7 @@ def login(request: OAuth2PasswordRequestForm = Depends(), db: Session=Depends(ge
 
     return {"access_token": access_token,
             "role": user.role,
+            "username": user.username,
             "token_type": "Bearer"}
 
 def get_current_user(token: str = Depends(oauth2_scheme)):
