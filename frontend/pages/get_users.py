@@ -4,6 +4,13 @@ import requests
 from config import API_URL
 from menu import menu_with_redirect
 
+st.set_page_config(
+    page_title="View Users",
+    layout="wide",
+    initial_sidebar_state="auto",
+    page_icon=":books:"
+)
+
 menu_with_redirect()
 
 # Protected route
@@ -21,16 +28,16 @@ headers = {
 with st.spinner("Fetching users from the database"):
     response = requests.get(url, headers=headers)
 
-users = response.json()
-
-df = pd.DataFrame([{
-    "ID": user["id"],
-    "Username": user["username"],
-    "Email": user["email"],
-    "Role": user["role"]
-    } for user in users])   
-
 if response.status_code == 200:
+    users = response.json()
+
+    df = pd.DataFrame(data=[{
+        "ID": user["id"],
+        "Username": user["username"],
+        "Email": user["email"],
+        "Role": user["role"]
+        } for user in users],
+        index=None)   
     st.table(df)
 else:
     error_detail = response.json().get("detail", "Something went wrong.")

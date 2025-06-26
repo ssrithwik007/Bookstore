@@ -4,9 +4,10 @@ from config import API_URL
 from menu import menu_with_redirect
 
 st.set_page_config(
-    page_title="Add Books",
+    page_title="Delete Books",
     layout="centered",
     initial_sidebar_state="auto",
+    page_icon=":books:"
 )
 
 menu_with_redirect()
@@ -33,7 +34,8 @@ with st.container():
 
     if submit:
         for book_title in book_titles:
-            response = requests.delete(f"{url}/{book_ids[book_title]}", headers=headers)
+            with st.spinner(f"Deleting {book_title}..."):
+                response = requests.delete(f"{url}/{book_ids[book_title]}", headers=headers)
             if response.status_code == 200:
                 st.success(f"{book_title} deleted successfully")
             else:

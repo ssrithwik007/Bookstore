@@ -1,73 +1,17 @@
 import streamlit as st
-import requests
-from config import API_URL
 from menu import menu_with_redirect
+from utils import fetch_cart, remove_book_from_cart, buy_now_from_cart, checkout_cart, clear_cart
 
 st.set_page_config(
     page_title="View Cart",
-    page_icon=":books:",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="auto",
+    page_icon=":books:"
 )
 
 menu_with_redirect()
 
 st.title("CART")
-
-url = f"{API_URL}/users/me/cart"
-checkout_url = f"{API_URL}/users/me/checkout"
-purchase_url = f"{API_URL}/users/me/purchases"
-
-headers = {
-    "Authorization": f"Bearer {st.session_state.access_token}"
-}
-
-def fetch_cart():
-    with st.spinner("Fetching your cart"):
-        response = requests.get(url, headers=headers)
-    if response.status_code == 200 and response.json() != []:
-        return response.json()
-    elif response.status_code == 200 and response.json() == []:
-        return []
-    else:
-        st.error(f"Failed to fetch cart")
-
-def remove_book(book_id: int):
-    data = {"book_id": book_id, "quantity": 1}
-    with st.spinner("Removing book from cart"):
-        cart_response = requests.delete(url, json=data, headers=headers)
-    if cart_response.status_code == 200:
-        st.toast("Book removed from cart")
-    else:
-        st.toast("Error: Could not remove book from cart")
-
-def clear_cart():
-    with st.spinner("Clearing Cart"):
-        res = requests.delete(f"{url}/clear", headers=headers)
-    if res.status_code == 200:
-        st.toast("Cart cleared")
-        st.rerun()
-    else:
-        st.toast("Could not clear cart")
-
-def buy_now(book_id):
-    data = {"book_id": book_id, "quantity": 1}
-    remove_book(book_id)
-    with st.spinner("Buying book"):
-        res = requests.post(purchase_url, json=data, headers=headers)
-    if res.status_code == 201:
-        st.toast("Book purchased successfully!")
-    else:
-        st.toast("Error: Could not purchase book")
-        st.error(f"{res.json().get("detail")}")
-
-def checkout_cart():
-    with st.spinner("Checking out cart"):
-        res = requests.post(checkout_url, headers=headers)
-    if res.status_code == 201:
-        st.toast("Cart checked out")
-        st.rerun()
-    else:
-        st.toast("Could not checkout")
 
 cart = fetch_cart()
 
@@ -80,9 +24,9 @@ if cart:
             with col1:
                 st.markdown(f"#### {book['name']}")            
             with col2:
-                st.button("Remove Book", key=f"remove_book_{book['id']}", on_click=remove_book, args=(book['id'],))
+                st.button("Remove Book", key=f"remove_book_{book['id']}", on_click=remove_book_from_cart, args=(book['id'],))
             with col3:
-                st.button("Buy now", key=f"buy_now_{book['id']}", on_click=buy_now, args=(book['id'],))
+                st.button("Buy now", key=f"buy_now_{book['id']}", on_click=buy_now_from_cart, args=(book['id'],))
             with col4:
                 st.markdown(f"₹{book['price']}")
             st.markdown("---")

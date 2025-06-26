@@ -16,6 +16,8 @@ class Book(Base):
     added_by_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"))
 
     added_by = relationship("User", back_populates="books_added")
+    cart_items = relationship("Cart", back_populates="book", cascade="all, delete", passive_deletes=True)
+    purchases = relationship("Purchase", back_populates="book", cascade="all, delete", passive_deletes=True)
 
 class User(Base):
     __tablename__ = 'users'
@@ -35,20 +37,20 @@ class Cart(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"))
-    book_id = Column(Integer, ForeignKey('books.id'))
+    book_id = Column(Integer, ForeignKey('books.id', ondelete="CASCADE"))
     quantity = Column(Integer, default=1)
 
     user = relationship("User", back_populates='cart_items')
-    book = relationship("Book")
+    book = relationship("Book", back_populates="cart_items")
 
 class Purchase(Base):
     __tablename__ = 'purchases'
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"))
-    book_id = Column(Integer, ForeignKey('books.id'))
+    book_id = Column(Integer, ForeignKey('books.id', ondelete="CASCADE"))
     quantity = Column(Integer, default=1)
 
     user = relationship("User", back_populates='purchases')
-    book = relationship("Book")
+    book = relationship("Book", back_populates="purchases")
 

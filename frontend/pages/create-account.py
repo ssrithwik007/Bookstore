@@ -3,6 +3,13 @@ import requests
 import re
 from config import API_URL
 
+st.set_page_config(
+    page_title="Create Account",
+    layout="wide",
+    initial_sidebar_state="auto",
+    page_icon=":books:"
+)
+
 email_pattern = r"^[\w\.-]+@[\w\.-]+\.\w{2,4}$"
 
 col1, col2, col3 = st.columns(3)
@@ -46,7 +53,8 @@ with col2:
                 "password": password,
                 "role": role
             }
-            response = requests.post(f"{API_URL}/users", json=data)
+            with st.spinner("Creating account..."):
+                response = requests.post(f"{API_URL}/users", json=data)
 
             if response.status_code == 201:
                 st.success("Account created successfully!")

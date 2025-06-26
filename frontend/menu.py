@@ -1,6 +1,5 @@
 import streamlit as st
 
-
 def authenticated_menu():
     # Show a navigation menu for authenticated users
     st.sidebar.page_link("pages/home.py", label="Home")
@@ -11,7 +10,7 @@ def authenticated_menu():
         st.sidebar.page_link("pages/update_books.py", label="Update books")
         st.sidebar.page_link("pages/delete_books.py", label="Delete books")
         st.sidebar.divider()        
-        st.sidebar.page_link("pages/get_users.py", label="View users", disabled=st.session_state.role != "admin")
+        st.sidebar.page_link("pages/get_users.py", label="View users", disabled=st.session_state.role != "admin", help="Only admins can view users")
 
     if st.session_state.role == "user":
         st.sidebar.divider()

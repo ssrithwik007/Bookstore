@@ -284,7 +284,7 @@ def checkout_cart(db: Session=Depends(get_db), current_user: schemas.TokenData=D
 
     return {"message": "Purchase Successful"}
 
-@router.delete("/me/purchases/{book_id}", status_code=status.HTTP_201_CREATED, tags=["Purchase"])
+@router.delete("/me/purchases/{book_id}", status_code=status.HTTP_200_OK, tags=["Purchase"])
 def refund_book(book_id: int, db: Session=Depends(get_db), current_user: schemas.TokenData=Depends(user_only)):
     try:
         validate_book(book_id, db)
