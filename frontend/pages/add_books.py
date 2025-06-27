@@ -40,11 +40,12 @@ with st.container(border=True):
                 response = requests.post(BOOKS_URL, json=data, headers=headers)
                 
             if response.status_code == 201:
-                st.success("Book added successfully")
+                st.toast("Book added successfully", icon="🎉")
                 st.rerun()
             else:
                 if response.headers.get("Content-Type") == "application/json":
                     error_detail = response.json().get("detail", "Unknown error")
                 else:
                     error_detail = response.text
-                st.error(f"Failed to add book: {error_detail}")
+                st.toast(f"Failed to add book: {error_detail}", icon="❌")
+                st.rerun()
