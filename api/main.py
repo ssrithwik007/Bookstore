@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from . import models
 from .database import engine
@@ -40,13 +40,18 @@ init_admin(username=ADMIN_USERNAME, password=ADMIN_PASS)
 def home():
     return {"message": "Read docs at /docs"}
 
-@app.get("/db-health")
-def health_check():
+@app.api_route("/db-health", methods=["GET", "HEAD"], status_code=status.HTTP_200_OK)
+async def db_health_check(): # Renamed to avoid conflict with get_db dependency if you add it
     try:
         with engine.connect() as conn:
-            conn.execute(text("SELECT 1"))
+            conn.execute(text("SELECT 1")) # Use text directly from sqlalchemy import
         return {"status": "✅ Database connected"}
     except Exception as e:
-        return {"status": "❌ Failed", "error": str(e)}
+        # For health checks, it's better to return a 503 Service Unavailable
+        # if the database is not reachable, rather than a 200 OK with an error message.
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Database connection failed: {e}"
+        )
 
     
