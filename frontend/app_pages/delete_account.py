@@ -23,7 +23,7 @@ with st.container(border=True):
         col1, col2 = st.columns([1,1])
         with col1:
             if st.button("No, Keep my account", type="primary", key="redirect", use_container_width=True):
-                st.switch_page("pages/home.py")
+                st.switch_page("app_pages/home.py")
         with col2:
             if st.button("Yes, Delete my account", key="delete", on_click=delete_account, use_container_width=True):
-                st.switch_page("pages/home.py")
+                st.switch_page("app_pages/home.py")

@@ -12,7 +12,7 @@ def get_headers():
 
 # VIEW BOOKS PAGE
 
-def fetch_books_for_admin_pages():
+def fetch_books_for_admin_app_pages():
     headers = get_headers()
     with st.spinner("Fetching books..."):
         response = requests.get(BOOKS_URL, headers=headers)

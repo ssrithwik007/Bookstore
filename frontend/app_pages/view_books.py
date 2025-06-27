@@ -1,6 +1,6 @@
 import streamlit as st
 from menu import menu_with_redirect
-from utils import fetch_books_for_admin_pages, delete_book
+from utils import fetch_books_for_admin_app_pages, delete_book
 
 st.set_page_config(
     page_title="View Books",
@@ -13,7 +13,7 @@ menu_with_redirect()
 
 st.title("BOOKS")
 
-books = fetch_books_for_admin_pages()
+books = fetch_books_for_admin_app_pages()
 
 if books:
     books_per_col = 3
@@ -37,7 +37,7 @@ if books:
                     with col1:
                         if st.button(label="Update Book", key=f"update{book['id']}", use_container_width=True):
                             st.session_state.book_to_update = book
-                            st.switch_page("pages/update_books.py")
+                            st.switch_page("app_pages/update_books.py")
                     with col2:
                         if st.button(label="Delete Book", key=f"delete{book['id']}", use_container_width=True):
                             delete_book(book["id"])
