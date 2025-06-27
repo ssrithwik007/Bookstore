@@ -28,11 +28,11 @@ def clear_cart_dialog():
 def checkout_dialog():
     col1, col2, col3 = st.columns([2, 1, 2])
     with col1:
-        if st.button("✅ Yes, Checkout", use_container_width=True):
+        if st.button("✅ Yes, Checkout", type="primary",use_container_width=True):
             checkout_cart()
             st.rerun()
     with col3:
-        if st.button("❌ Cancel",type="primary", use_container_width=True):
+        if st.button("❌ Cancel", use_container_width=True):
             st.stop()
 
 cart = fetch_cart()
