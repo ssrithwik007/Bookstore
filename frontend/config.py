@@ -1,4 +1,10 @@
-API_URL = "http://localhost:8000"
+import streamlit as st
+
+try:
+    API_URL = st.secrets["api"]["url"]
+except KeyError:
+    st.error("API URL not found in secrets.toml. Please ensure it's configured under [api] url.")
+    st.stop()
 
 BOOKS_URL = f"{API_URL}/books"
 
