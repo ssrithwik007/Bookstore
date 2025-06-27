@@ -7,9 +7,12 @@ A web-based bookstore management system with a clear role-based access model. Bu
 ## 🧱 Tech Stack
 
 - **Frontend**: Streamlit
+- **Frontend Theme**: https://github.com/streamlit/docs
 - **Backend**: FastAPI
+- **API deployed on**: Render
 - **ORM**: SQLAlchemy
 - **Database**: PostgreSQL
+- **Database hosted on**: Supabase
 
 ---
 
