@@ -2,6 +2,7 @@
 
 A web-based bookstore management system with a clear role-based access model. Built using **Streamlit** for the frontend and **FastAPI** for the backend, powered by **PostgreSQL** with **SQLAlchemy ORM**.
 
+[APP LINK](https://rithwiks-bookstore.streamlit.app)
 ---
 
 ## 🧱 Tech Stack
