@@ -16,13 +16,13 @@ menu_with_redirect()
 headers = get_headers()
 
 with st.container(border=True):
-    title = st.text_input(label="Title", placeholder="Title of the book")
-    author = st.text_input(label="Author", placeholder="Name of the author")
-    description = st.text_area(label="Description", placeholder="Short description of the book")
-    genre = st.text_input(label="Genre", placeholder="Book genre")
+    title = st.text_input(label="Title", placeholder="Title of the book", value=None)
+    author = st.text_input(label="Author", placeholder="Name of the author", value=None)
+    description = st.text_area(label="Description", placeholder="Short description of the book", value=None)
+    genre = st.text_input(label="Genre", placeholder="Book genre", value=None)
     price =  st.number_input(label="Price", format="%0.2f", value=0.0)
 
-    submit = st.button(label="Add book", use_container_width=True)
+    submit = st.button(label="Add book", use_container_width=True, disabled=not all([title, author, description, genre, price]))
 
     if submit:
         if not all([title, author, description, genre, price]):
@@ -41,6 +41,7 @@ with st.container(border=True):
                 
             if response.status_code == 201:
                 st.success("Book added successfully")
+                st.rerun()
             else:
                 if response.headers.get("Content-Type") == "application/json":
                     error_detail = response.json().get("detail", "Unknown error")
