@@ -3,6 +3,7 @@ import requests
 from config import BOOKS_URL
 from menu import menu_with_redirect
 from utils import get_headers
+import time
 
 st.set_page_config(
     page_title="Add Books",
@@ -38,9 +39,10 @@ with st.container(border=True):
 
             with st.spinner("Adding book..."):
                 response = requests.post(BOOKS_URL, json=data, headers=headers)
-                
+                time.sleep(2)
             if response.status_code == 201:
                 st.toast("Book added successfully", icon="🎉")
+                time.sleep(2)
                 st.rerun()
             else:
                 if response.headers.get("Content-Type") == "application/json":
@@ -48,4 +50,5 @@ with st.container(border=True):
                 else:
                     error_detail = response.text
                 st.toast(f"Failed to add book: {error_detail}", icon="❌")
+                time.sleep(2)
                 st.rerun()
