@@ -66,4 +66,4 @@ if purchases:
                         st.button("Refund Book", key=f"refund_book_{book['id']}", type="primary", on_click=refund_book_dialog, args=(book,), use_container_width=True)
 else:
     st.markdown("## You have not purchased any books yet, Browse some books and add purchase them")
-    st.page_link("app_pages/browse.py", label="Browse Books")
+    st.page_link("pages/browse.py", label="Browse Books")

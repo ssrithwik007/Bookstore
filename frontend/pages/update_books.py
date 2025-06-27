@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 from config import BOOKS_URL
 from menu import menu_with_redirect
-from utils import get_headers, fetch_books_for_admin_app_pages
+from utils import get_headers, fetch_books_for_admin_pages
 
 st.set_page_config(
     page_title="Add Books",
@@ -15,7 +15,7 @@ menu_with_redirect()
 
 headers = get_headers()
 
-books = fetch_books_for_admin_app_pages()
+books = fetch_books_for_admin_pages()
 
 if books:
     book_ids = {book["name"]: book["id"] for book in books}

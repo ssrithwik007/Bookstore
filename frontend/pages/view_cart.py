@@ -77,7 +77,7 @@ if cart:
 
 else:
     st.markdown("## Your cart is empty, Browse some books and add them to yout cart")
-    st.page_link("app_pages/browse.py", label="Browse Books")
+    st.page_link("pages/browse.py", label="Browse Books")
 
 
 
