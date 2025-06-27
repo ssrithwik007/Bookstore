@@ -13,6 +13,28 @@ menu_with_redirect()
 
 st.title("CART")
 
+@st.dialog("Clear Cart?")
+def clear_cart_dialog():
+    col1, col2, col3 = st.columns([2, 1, 2])
+    with col1:
+        if st.button("✅ Yes, Clear", use_container_width=True):
+            clear_cart()
+            st.rerun()
+    with col3:
+        if st.button("❌ Cancel",type="primary", use_container_width=True):
+            st.stop()
+
+@st.dialog("Checkout?")
+def checkout_dialog():
+    col1, col2, col3 = st.columns([2, 1, 2])
+    with col1:
+        if st.button("✅ Yes, Checkout", use_container_width=True):
+            checkout_cart()
+            st.rerun()
+    with col3:
+        if st.button("❌ Cancel",type="primary", use_container_width=True):
+            st.stop()
+
 cart = fetch_cart()
 
 if cart:
@@ -31,44 +53,15 @@ if cart:
                 st.markdown(f"₹{book['price']}")
             st.markdown("---")
 
-    if "confirm_clear" not in st.session_state:
-        st.session_state.confirm_clear = False
-    if "confirm_check_out" not in st.session_state:
-        st.session_state.confirm_check_out = False
-
     c1, c2, c3 = st.columns([6,2,1])
     with c1:
         clear, checkout = st.columns([1, 1])
         with clear:
             with st.container():
-                if st.session_state.confirm_clear:
-                    st.warning("Are you sure you want to clear the cart?")
-                    col_a, col_b = st.columns([1, 1])
-                    with col_a:
-                        if st.button("Yes, Clear"):
-                            st.session_state.confirm_clear = False
-                            clear_cart()
-                    with col_b:
-                        if st.button("Cancel"):
-                            st.session_state.confirm_clear = False
-                else:
-                    if st.button("Clear Cart", type="primary"):
-                        st.session_state.confirm_clear = True
+                st.button("Clear Cart", type="primary", on_click=clear_cart_dialog)
         with checkout:
             with st.container():
-                if st.session_state.confirm_check_out:
-                    st.warning("Are you sure you want to checkout?")
-                    col_a, col_b = st.columns([1, 1])
-                    with col_a:
-                        if st.button("Yes, Checkout"):
-                            st.session_state.confirm_check_out = False
-                            checkout_cart()
-                    with col_b:
-                        if st.button("Cancel"):
-                            st.session_state.confirm_check_out = False
-                else:
-                    if st.button("Checkout", type="primary"):
-                        st.session_state.confirm_check_out = True
+                st.button("Checkout", type="primary", on_click=checkout_dialog)
     with c2:
         st.markdown("### Total")
     with c3:
