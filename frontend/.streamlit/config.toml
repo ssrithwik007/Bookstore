@@ -4,6 +4,38 @@ showSidebarNavigation = false
 [server]
 headless = true
 
+[[theme.fontFaces]]
+family = "SpaceGrotesk"
+url = "frontend/static/SpaceGrotesk-VariableFont_wght.ttf"
+
+[[theme.fontFaces]]
+family = "SpaceGroteskHeader"
+url = "frontend/static/SpaceGrotesk-SemiBold.ttf"
+
+[[theme.fontFaces]]
+family = "SpaceMono"
+url = "frontend/static/SpaceMono-Bold.ttf"
+style = "normal"
+weight = 700
+
+[[theme.fontFaces]]
+family = "SpaceMono"
+url = "frontend/static/SpaceMono-BoldItalic.ttf"
+style = "italic"
+weight = 700
+
+[[theme.fontFaces]]
+family = "SpaceMono"
+url = "frontend/static/SpaceMono-Italic.ttf"
+style = "italic"
+weight = 400
+
+[[theme.fontFaces]]
+family = "SpaceMono"
+url = "frontend/static/SpaceMono-Regular.ttf"
+style = "normal"
+weight = 400
+
 [theme]
 primaryColor = "#bb5a38"
 backgroundColor = "#f4f3ed"
