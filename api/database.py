@@ -7,6 +7,14 @@ import os
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
+# USER = os.getenv("user")
+# PASSWORD = os.getenv("password")
+# HOST = os.getenv("host")
+# PORT = int(os.getenv("port"))
+# DBNAME = os.getenv("dbname")
+
+# # Construct the SQLAlchemy connection string
+# DATABASE_URL = f"postgresql+psycopg2://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}?sslmode=require"
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL environment variable is not set.")
 

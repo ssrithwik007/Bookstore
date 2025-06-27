@@ -5,6 +5,7 @@ from .database import engine
 from .routers import books, users, login
 from dotenv import load_dotenv
 from .routers.users import init_admin
+from sqlalchemy import text
 import os
 
 origins = ["http://localhost:5500"]
@@ -38,5 +39,14 @@ init_admin(username=ADMIN_USERNAME, password=ADMIN_PASS)
 @app.get("/")
 def home():
     return {"message": "Read docs at /docs"}
+
+@app.get("/db-health")
+def health_check():
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        return {"status": "✅ Database connected"}
+    except Exception as e:
+        return {"status": "❌ Failed", "error": str(e)}
 
     
