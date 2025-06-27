@@ -45,7 +45,7 @@ with col2:
 
         c1, c2, c3 = st.columns([1.2, 2, 1.2])
         with c2:
-            st.page_link(page="app_app_pages/create-account.py", label="\u00A0\u00A0New user? Create Account", use_container_width=True)
+            st.page_link(page="app_pages/create-account.py", label="\u00A0\u00A0New user? Create Account", use_container_width=True)
 
     if submit:
         if not username or not password:
