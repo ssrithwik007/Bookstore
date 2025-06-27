@@ -25,8 +25,51 @@ def buy_book_dialog(book):
         if st.button("❌ Cancel", use_container_width=True):
             st.rerun()
 
-books = fetch_books()
+
+try:
+    books = fetch_books()
+except Exception as e:
+    st.error(f"Failed to fetch books: {e}")
+    st.stop()
+
+
 if books:
+    genres = [book['genre'] for book in books]
+    genres = sorted(list(set(genres)))
+    genres.insert(0, "All")
+    sort_by_options = ["None", "Price - Low to High", "Price - High to Low", "Title - A to Z", "Title - Z to A"]
+
+    with st.container():
+        col1, col2, col3 = st.columns([1,1,4])
+        with col1:
+            with st.container():
+                filter_by = st.selectbox("Filter by", options=genres, index=0)
+        with col2:
+            with st.container():
+                sort_by = st.selectbox("Sort by", options=sort_by_options, index=0)
+        with col3:
+            with st.container():
+                search_by = st.text_input("Search by", placeholder="Search by title, author", value=None)
+
+    if filter_by != "All":
+        books = [book for book in books if book['genre'] == filter_by]
+    if sort_by != "None":
+        if sort_by == "Price - Low to High":
+            books = sorted(books, key=lambda x: x['price'])
+        elif sort_by == "Price - High to Low":
+            books = sorted(books, key=lambda x: x['price'], reverse=True)
+        elif sort_by == "Title - A to Z":
+            books = sorted(books, key=lambda x: x['name'])
+        elif sort_by == "Title - Z to A":
+            books = sorted(books, key=lambda x: x['name'], reverse=True)
+
+    if search_by:
+        books = [book for book in books if search_by.lower() in book['name'].lower() or search_by.lower() in book['author'].lower()]
+
+    if not books:
+        st.error("No books found. Maybe try a different filter or search or Try searching in your cart or purchases")
+        st.stop()
+
     books_per_col = 3
     for i in range(0, len(books), books_per_col):
         cols = st.columns(books_per_col, border=True)
@@ -51,4 +94,4 @@ if books:
                         st.button("Buy now", key=f"buy_now_{book["id"]}", on_click=buy_book_dialog, args=(book,), use_container_width=True)
 
 else:
-    st.error("Failed to fetch books.")
+    st.error("No books found.")

@@ -23,7 +23,7 @@ def fetch_books_for_admin_pages():
             error_detail = response.json().get("detail")
         else:
             error_detail = response.text
-        st.error(f"Failed to fetch books: {error_detail}")
+        raise Exception(f"Failed to fetch books: {error_detail}")
 
 def delete_book(book_id: int):
     headers = get_headers()
@@ -86,7 +86,7 @@ def fetch_books():
         books_to_display = [book for book in books if book["id"] not in cart_ids and book["id"] not in purchase_ids]
         return books_to_display
     else:
-        return False
+        raise Exception("Failed to fetch books")
 
 # VIEW CART PAGE
 
@@ -103,7 +103,7 @@ def fetch_cart():
             error_detail = response.json().get("detail")
         else:
             error_detail = response.text
-        st.error(f"Failed to fetch cart: {error_detail}")
+        raise Exception(f"Failed to fetch cart: {error_detail}")
 
 def remove_book_from_cart(book_id: int):
     headers = get_headers()
@@ -191,7 +191,7 @@ def fetch_purchases():
             error_detail = response.json().get("detail")
         else:
             error_detail = response.text
-        st.error(f"Failed to fetch purchases: {error_detail}")
+        raise Exception(f"Failed to fetch purchases: {error_detail}")
 
 def refund_all_books(books):
     headers = get_headers()
@@ -214,7 +214,12 @@ def refund_all_books(books):
 def delete_account():
     headers = get_headers()
     with st.spinner("Deleting account, please do not exit"):
-        purchases = fetch_purchases()
+        try:
+            purchases = fetch_purchases()
+        except Exception as e:
+            st.error(f"Failed to fetch purchases: {e}", icon="❌")
+            st.error("Stopped the process, please refresh the page and try again")
+            st.stop()
         if purchases:
             try:
                 books = [item["book"] for item in purchases]

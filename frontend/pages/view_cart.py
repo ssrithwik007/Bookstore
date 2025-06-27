@@ -35,7 +35,11 @@ def checkout_dialog():
         if st.button("❌ Cancel", use_container_width=True):
             st.stop()
 
-cart = fetch_cart()
+try:
+    cart = fetch_cart()
+except Exception as e:
+    st.error(f"Failed to fetch cart: {e}")
+    st.stop()
 
 if cart:
     books = [item["book"] for item in cart]
