@@ -8,7 +8,7 @@ from .routers.users import init_admin
 from sqlalchemy import text
 import os
 
-origins = ["http://localhost:5500"]
+origins = ["http://localhost:5500", "https://bookstore-coa4.onrender.com"]
 
 app = FastAPI(
     title="Rithwik's Bookstore API",
